@@ -9,7 +9,7 @@ const Listing: FC = () => {
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
   const [currentPage, setCurrentPage] = useState(1)
   const [selectedGender, setSelectedGender] = useState('')
-  const [usersPerPage] = useState(9)
+  const usersPerPage = 9
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -51,13 +51,17 @@ const Listing: FC = () => {
     }
 
     const timeoutId = setTimeout(() => {
-      const filteredResults = users.filter(
-        (user) =>
-          user.name.first.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.name.last.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.name.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.phone.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      const filteredResults = users.filter((user) => {
+        const fullName = `${user.name.title} ${user.name.first} ${user.name.last}`.toLowerCase()
+        const searchTermLower = searchTerm.toLowerCase().trim()
+        const phone = user.phone.toLowerCase().trim()
+
+        return (
+          fullName.includes(searchTermLower) ||
+          phone.includes(searchTermLower)
+        )
+      })
+
       setFilteredUsers(filteredResults)
     }, 1000)
 
