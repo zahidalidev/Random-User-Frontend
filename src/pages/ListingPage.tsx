@@ -1,4 +1,5 @@
 import { useState, useEffect, FC } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 import { fetchUsers } from '../services/userService'
 import { Filters, LoadingIndicator, Pagination, Search, UserCard } from '../components'
@@ -7,11 +8,15 @@ import { User } from '../types'
 const Listing: FC = () => {
   const [users, setUsers] = useState<User[]>([])
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedGender, setSelectedGender] = useState('')
-  const usersPerPage = 9
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  const params = new URLSearchParams(location.search)
+  const currentPage = parseInt(params.get('page') || '1')
+  const selectedGender = params.get('gender') || ''
+  const usersPerPage = 9
 
   const fetchData = async () => {
     setLoading(true)
@@ -25,22 +30,12 @@ const Listing: FC = () => {
     fetchData()
   }, [currentPage, selectedGender])
 
-  useEffect(() => {
-    const savedCurrentPage = sessionStorage.getItem('currentPage')
-    const savedSelectedGender = sessionStorage.getItem('selectedGender')
-
-    if (savedCurrentPage) setCurrentPage(Number(savedCurrentPage))
-    if (savedSelectedGender) setSelectedGender(savedSelectedGender)
-  }, [])
-
   const paginate = (pageNumber: number) => {
-    setCurrentPage(pageNumber)
-    sessionStorage.setItem('currentPage', String(pageNumber))
+    navigate(`?page=${pageNumber}&gender=${selectedGender}`)
   }
 
   const handleFilterChange = (selectedGender: string) => {
-    setSelectedGender(selectedGender)
-    sessionStorage.setItem('selectedGender', selectedGender)
+    navigate(`?page=1&gender=${selectedGender}`)
   }
 
   const handleSearch = (searchTerm: string) => {
