@@ -1,4 +1,5 @@
 import { useState, useEffect, FC } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 
 import { fetchUsers } from '../services/userService'
 import { Filters, LoadingIndicator, Pagination, Search, UserCard } from '../components'
@@ -7,11 +8,15 @@ import { User } from '../types'
 const Listing: FC = () => {
   const [users, setUsers] = useState<User[]>([])
   const [filteredUsers, setFilteredUsers] = useState<User[]>([])
-  const [currentPage, setCurrentPage] = useState(1)
-  const [selectedGender, setSelectedGender] = useState('')
-  const [usersPerPage] = useState(9)
   const [searchTimeout, setSearchTimeout] = useState<NodeJS.Timeout | null>(null)
   const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
+  const location = useLocation()
+  
+  const params = new URLSearchParams(location.search)
+  const currentPage = parseInt(params.get('page') || '1')
+  const selectedGender = params.get('gender') || ''
+  const usersPerPage = 9
 
   const fetchData = async () => {
     setLoading(true)
@@ -25,22 +30,12 @@ const Listing: FC = () => {
     fetchData()
   }, [currentPage, selectedGender])
 
-  useEffect(() => {
-    const savedCurrentPage = sessionStorage.getItem('currentPage')
-    const savedSelectedGender = sessionStorage.getItem('selectedGender')
-
-    if (savedCurrentPage) setCurrentPage(Number(savedCurrentPage))
-    if (savedSelectedGender) setSelectedGender(savedSelectedGender)
-  }, [])
-
   const paginate = (pageNumber: number) => {
-    setCurrentPage(pageNumber)
-    sessionStorage.setItem('currentPage', String(pageNumber))
+    navigate(`?page=${pageNumber}&gender=${selectedGender}`)
   }
 
   const handleFilterChange = (selectedGender: string) => {
-    setSelectedGender(selectedGender)
-    sessionStorage.setItem('selectedGender', selectedGender)
+    navigate(`?page=1&gender=${selectedGender}`)
   }
 
   const handleSearch = (searchTerm: string) => {
@@ -51,13 +46,17 @@ const Listing: FC = () => {
     }
 
     const timeoutId = setTimeout(() => {
-      const filteredResults = users.filter(
-        (user) =>
-          user.name.first.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.name.last.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.name.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.phone.toLowerCase().includes(searchTerm.toLowerCase())
-      )
+      const filteredResults = users.filter((user) => {
+        const fullName = `${user.name.title} ${user.name.first} ${user.name.last}`.toLowerCase()
+        const searchTermLower = searchTerm.toLowerCase().trim()
+        const phone = user.phone.toLowerCase().trim()
+
+        return (
+          fullName.includes(searchTermLower) ||
+          phone.includes(searchTermLower)
+        )
+      })
+
       setFilteredUsers(filteredResults)
     }, 1000)
 

@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import ListingPage from './pages/ListingPage'
 import ProfilePage from './pages/ProfilePage'
 import { LoadingIndicator } from './components'
+import NotFoundPage from './pages/NotFoundPage'
 
 const App: FC = () => (
   <div className='container mx-auto px-4'>
@@ -12,7 +13,7 @@ const App: FC = () => (
         <Routes>
           <Route path='/' element={<ListingPage />} />
           <Route path='/profile/:userId' element={<ProfilePage />} />
-          <Route path='*' element={<Navigate to='/' />} />
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </Suspense>
     </Router>
